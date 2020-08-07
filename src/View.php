@@ -1,4 +1,5 @@
 <?php
+
 namespace SubmissionLogger;
 
 class View {

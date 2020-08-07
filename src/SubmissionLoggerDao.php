@@ -1,4 +1,5 @@
 <?php
+
 namespace SubmissionLogger;
 
 class SubmissionLoggerDao {
@@ -15,7 +16,7 @@ class SubmissionLoggerDao {
 	{
 		$logs = [];
 
-		$query = 'SELECT data, date FROM sl_logs ORDER BY date(date) ASC';
+		$query = 'SELECT data, date FROM sl_logs ORDER BY datetime(date) DESC';
 		
 		$stmt = $this->database->prepare($query);
 		

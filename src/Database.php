@@ -1,4 +1,5 @@
 <?php
+
 namespace SubmissionLogger;
 
 use SQLite3;

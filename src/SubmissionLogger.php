@@ -1,8 +1,9 @@
 <?php
+
 namespace SubmissionLogger;
 
 class SubmissionLogger {
-	private $database, $authenticated, $unregistered, $passwordRegister, $passwordCheck, $logout, $errors;
+	private $database, $authenticated, $unregistered, $passwordRegister, $passwordCheck, $logout;
 
 	public function __construct()
 	{
@@ -13,6 +14,10 @@ class SubmissionLogger {
 
 	private function setAuthPassword($password)
 	{
+		if(strlen($password) < 12) {		
+			return;
+		}
+
 		$hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
 		$query = 'INSERT INTO sl_auth (key) VALUES (:password)';
