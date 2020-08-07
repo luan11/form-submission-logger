@@ -1,0 +1,16 @@
+{
+    "name": "luan11/form-submission-logger",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "luan11",
+            "email": "luaannovais@live.com"
+        }
+    ],
+	"require": {},
+	"autoload": {
+		"psr-4": {
+			"SubmissionLogger\\": "src/"
+		}
+	}
+}
