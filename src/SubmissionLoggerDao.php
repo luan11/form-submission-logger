@@ -6,20 +6,29 @@ class SubmissionLoggerDao {
 
 	public function __construct()
 	{
-		$database = new Database();
+		$database = new Database;
 
 		$this->database = $database->getInstance();
 	}
 
 	public function index()
 	{
-		$query = 'SELECT data, date FROM sl_logs';
+		$logs = [];
+
+		$query = 'SELECT data, date FROM sl_logs ORDER BY date(date) ASC';
 		
 		$stmt = $this->database->prepare($query);
 		
 		$result = $stmt->execute();
 
-		return $result->fetchArray(SQLITE3_ASSOC);
+		while($log = $result->fetchArray(SQLITE3_ASSOC)) {
+			array_push($logs, [
+				'data' => unserialize($log['data']),
+				'date' => $log['date']
+			]);
+		}
+
+		return $logs;
 	}
 
 	public function paginate($perPage = 20)

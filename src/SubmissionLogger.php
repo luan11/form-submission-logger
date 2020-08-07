@@ -2,13 +2,13 @@
 namespace SubmissionLogger;
 
 class SubmissionLogger {
-	private $database, $authenticated, $unregistered, $passwordRegister, $passwordCheck, $logout;
+	private $database, $authenticated, $unregistered, $passwordRegister, $passwordCheck, $logout, $errors;
 
 	public function __construct()
 	{
-		$this->passwordRegister = isset($_POST['password_register']) ? $_POST['password_register'] : false;
-		$this->passwordCheck = isset($_POST['password_check']) ? $_POST['password_check'] : false;
-		$this->logout = isset($_POST['_logout']) ? $_POST['_logout'] : false;
+		$this->passwordRegister = isset($_POST['password_register']) ? filter_var($_POST['password_register']) : false;
+		$this->passwordCheck = isset($_POST['password_check']) ? filter_var($_POST['password_check']) : false;
+		$this->logout = isset($_POST['_logout']) ? filter_var($_POST['_logout']) : false;
 	}
 
 	private function setAuthPassword($password)
@@ -31,26 +31,26 @@ class SubmissionLogger {
 
 	private function authenticate()
 	{
+		$query = 'SELECT key FROM sl_auth';
+
+		if(!isset($this->database)) {
+			$database = new Database();
+			$this->database = $database->getInstance();
+		}
+
+		$stmt = $this->database->prepare($query);
+
+		$result = $stmt->execute();
+
+		$resultFetched = $result->fetchArray(SQLITE3_ASSOC);
+
 		if(session_status() === PHP_SESSION_NONE) {
 			session_start();
 		}
 
-		if(isset($_SESSION['auth']) && $_SESSION['auth'] === true) {
-			$this->authenticated = false;
+		if(isset($_SESSION['auth']) && $_SESSION['auth'] === true && $resultFetched !== false) {
+			$this->authenticated = true;
 		} else {
-			$query = 'SELECT key FROM sl_auth';
-
-			if(!isset($this->database)) {
-				$database = new Database();
-				$this->database = $database->getInstance();
-			}
-
-			$stmt = $this->database->prepare($query);
-
-			$result = $stmt->execute();
-
-			$resultFetched = $result->fetchArray(SQLITE3_ASSOC);
-
 			if($resultFetched === false) {
 				$this->authenticated = false;
 				$this->unregistered = true;
@@ -62,6 +62,8 @@ class SubmissionLogger {
 						$this->authenticated = true;
 						
 						$_SESSION['auth'] = $this->authenticated;
+
+						header('Refresh: 0');
 					} else {
 						$this->authenticated = false;
 					}					
@@ -100,15 +102,19 @@ class SubmissionLogger {
 		$this->authenticate();
 
 		if($this->authenticated) {
-			View::display('index');
+			$submissionLoggerDao = new SubmissionLoggerDao;
+			
+			$logs = $submissionLoggerDao->index();
+
+			View::show('index', compact('logs'));
 		}
 
 		if(!$this->authenticated && !$this->unregistered) {
-			View::display('auth');
+			View::show('auth');
 		}
 
 		if(!$this->authenticated && $this->unregistered) {
-			View::display('register');
+			View::show('register');
 		}
 
 		if($this->passwordRegister) {

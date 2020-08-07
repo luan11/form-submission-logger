@@ -5,7 +5,7 @@ class View {
 	const VIEWS_DIR = __DIR__ . '/views/';
 	const VIEWS_SUFFIX = '.view.php';
 
-	public static function display($name, $data = [])
+	public static function show($name, $data = [])
 	{
 		extract($data);
 

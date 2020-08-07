@@ -6,8 +6,8 @@
 	<title>Auth - Form SubmissionLogger</title>
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
 </head>
-<body class="h-100 py-5 d-flex justify-content-center align-items-center">
-	<div class="card w-25">
+<body class="h-100 py-5 d-flex justify-content-center align-items-center bg-light">
+	<div class="card w-25 shadow">
 		<div class="card-body">
 			<h4 class="card-title">Insert registered password to see logs</h4>
 
