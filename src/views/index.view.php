@@ -22,7 +22,7 @@
 
 	<main class="py-5">
 		<div class="container">
-			<div class="row d-block">
+			<div class="row flex-column align-items-center">
 				<?php if(empty($logs)): ?>
 					<div id="alerts" class="mb-2">
 						<div class="alert alert-info" role="alert">
@@ -51,6 +51,10 @@
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+
+				<nav>
+					<?php echo $pagination; ?>
+				</nav>
 			</div>
 		</div>
 	</main>

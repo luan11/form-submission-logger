@@ -109,9 +109,9 @@ class SubmissionLogger {
 		if($this->authenticated) {
 			$submissionLoggerDao = new SubmissionLoggerDao;
 			
-			$logs = $submissionLoggerDao->index();
+			$logs = $submissionLoggerDao->paginate();
 
-			View::show('index', compact('logs'));
+			View::show('index', $logs);
 		}
 
 		if(!$this->authenticated && !$this->unregistered) {
