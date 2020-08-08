@@ -1,8 +1,26 @@
 <?php
+/**
+ * SubmissionLogger data access object class.
+ * PHP Version >=5.3.0
+ * @package SubmissionLogger
+ * @link https://github.com/luan11/form-submission-logger The SubmissionLogger GitHub project
+ * @author Luan Novais <oi@luandev.ml>
+ * @copyright 2020 Luan Novais
+ * @license MIT
+ * @note This program is distributed in the hope that it will be useful - WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ */
 
 namespace SubmissionLogger;
 
+/**
+ * SubmissionLogger data access object class.
+ * @package SubmissionLogger
+ * @author Luan Novais <oi@luandev.ml>
+ */
 class SubmissionLoggerDao {
+	public $version = '1.0.0';
 	private $database;
 
 	public function __construct()

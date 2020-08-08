@@ -1,8 +1,26 @@
 <?php
+/**
+ * SubmissionLogger - Logs insertion and preview class.
+ * PHP Version >=5.3.0
+ * @package SubmissionLogger
+ * @link https://github.com/luan11/form-submission-logger The SubmissionLogger GitHub project
+ * @author Luan Novais <oi@luandev.ml>
+ * @copyright 2020 Luan Novais
+ * @license MIT
+ * @note This program is distributed in the hope that it will be useful - WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ */
 
 namespace SubmissionLogger;
 
+/**
+ * SubmissionLogger - Logs insertion and preview class.
+ * @package SubmissionLogger
+ * @author Luan Novais <oi@luandev.ml>
+ */
 class SubmissionLogger {
+	public $version = '1.0.0';
 	private $database, $authenticated, $unregistered, $passwordRegister, $passwordCheck, $logout;
 
 	public function __construct()

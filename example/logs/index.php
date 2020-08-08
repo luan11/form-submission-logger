@@ -2,7 +2,7 @@
 
 use SubmissionLogger\SubmissionLogger;
 
-include '../../vendor/autoload.php';
+include '../../src/SubmissionLoggerAutoload.php';
 
 $sl = new SubmissionLogger;
 
