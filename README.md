@@ -1,4 +1,4 @@
-![Form SubmissionLogger Logo](https://raw.githubusercontent.com/luan11/form-submission-logger/dev/example/images/form-submission-logger-logo.png)
+![Form SubmissionLogger Logo](https://raw.githubusercontent.com/luan11/form-submission-logger/master/example/images/form-submission-logger-logo.png)
 
 # Form SubmissionLogger - A way to save form submissions and view then
 
