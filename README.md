@@ -13,7 +13,7 @@ First download the project and use files from `/src` folder.
 ```php
 <?php
 
-use SubmissionLogger;
+use SubmissionLogger\SubmissionLogger;
 
 require 'SubmissionLoggerAutoload.php';
 
@@ -36,7 +36,7 @@ if(SubmissionLogger::store($data) === false) {
 ```php
 <?php
 
-use SubmissionLogger;
+use SubmissionLogger\SubmissionLogger;
 
 require 'SubmissionLoggerAutoload.php';
 
