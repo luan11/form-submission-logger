@@ -19,8 +19,8 @@
  * @return void
  */
 function SubmissionLoggerAutoload($classname) {
-	$realClassname = explode(DIRECTORY_SEPARATOR, $classname)[1];
-	$filename = __DIR__ . DIRECTORY_SEPARATOR . $realClassname . '.php';	
+	$realClassname = explode('\\', $classname)[1];
+	$filename = __DIR__ . DIRECTORY_SEPARATOR . $realClassname . '.php';
 
 	if(is_readable($filename)) {
 		require $filename;
