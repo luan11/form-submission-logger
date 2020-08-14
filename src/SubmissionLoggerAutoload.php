@@ -27,4 +27,6 @@ function SubmissionLoggerAutoload($classname) {
 	}
 }
 
+require 'config.php';
+
 spl_autoload_register('SubmissionLoggerAutoload', true, true);

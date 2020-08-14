@@ -20,7 +20,7 @@ namespace SubmissionLogger;
  * @author Luan Novais <oi@luandev.ml>
  */
 class SubmissionLogger {
-	public $version = '1.0.0';
+	public $version = '1.1.0';
 	private $database, $authenticated, $unregistered, $passwordRegister, $passwordCheck, $logout;
 
 	public function __construct()
@@ -38,48 +38,32 @@ class SubmissionLogger {
 
 		$hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-		$query = 'INSERT INTO sl_auth (key) VALUES (:password)';
+		$dao = new SubmissionLoggerDao;
 
-		if(!isset($this->database)) {
-			$database = new Database();
-			$this->database = $database->getInstance();
-		}
-
-		$stmt = $this->database->prepare($query);
-		$stmt->bindValue(':password', $hashedPassword, SQLITE3_TEXT);
-		$stmt->execute();
+		$dao->setAuth($hashedPassword);
 
 		header('Refresh: 0');
 	}
 
 	private function authenticate()
 	{
-		$query = 'SELECT key FROM sl_auth';
+		$dao = new SubmissionLoggerDao;
 
-		if(!isset($this->database)) {
-			$database = new Database();
-			$this->database = $database->getInstance();
-		}
-
-		$stmt = $this->database->prepare($query);
-
-		$result = $stmt->execute();
-
-		$resultFetched = $result->fetchArray(SQLITE3_ASSOC);
+		$auth = $dao->getAuth();
 
 		if(session_status() === PHP_SESSION_NONE) {
 			session_start();
 		}
 
-		if(isset($_SESSION['auth']) && $_SESSION['auth'] === true && $resultFetched !== false) {
+		if(isset($_SESSION['auth']) && $_SESSION['auth'] === true && $auth !== false) {
 			$this->authenticated = true;
 		} else {
-			if($resultFetched === false) {
+			if($auth === false) {
 				$this->authenticated = false;
 				$this->unregistered = true;
 			} else {
 				if($this->passwordCheck) {
-					$registeredPassword = $resultFetched['key'];
+					$registeredPassword = $auth['key'];
 
 					if(password_verify($this->passwordCheck, $registeredPassword)) {
 						$this->authenticated = true;
@@ -115,9 +99,9 @@ class SubmissionLogger {
 	{
 		$serializedData = serialize($data);
 
-		$submissionLoggerDao = new SubmissionLoggerDao();
+		$dao = new SubmissionLoggerDao();
 		
-		return $submissionLoggerDao->store($serializedData);
+		return $dao->store($serializedData);
 	}
 
 	public function start()
@@ -125,9 +109,9 @@ class SubmissionLogger {
 		$this->authenticate();
 
 		if($this->authenticated) {
-			$submissionLoggerDao = new SubmissionLoggerDao;
+			$dao = new SubmissionLoggerDao;
 			
-			$logs = $submissionLoggerDao->paginate();
+			$logs = $dao->paginate();
 
 			View::show('index', $logs);
 		}

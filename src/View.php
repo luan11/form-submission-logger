@@ -23,7 +23,7 @@ class View {
 	const VIEWS_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR;
 	const VIEWS_SUFFIX = '.view.php';
 
-	public $version = '1.0.0';
+	public $version = '1.1.0';
 
 	public static function show($name, $data = [])
 	{
@@ -53,6 +53,6 @@ class View {
 			$lisItems .= '<li class="page-item"> <a class="page-link" href="?page='. ($currentPage + 1) .'" aria-label="Next"> <span aria-hidden="true">&raquo;</span> </a> </li>';
 		}
 
-		return sprintf($list, $lisItems);
+		return $total > 1 ? sprintf($list, $lisItems) : '';
 	}
 }

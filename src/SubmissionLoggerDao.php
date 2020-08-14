@@ -20,29 +20,44 @@ namespace SubmissionLogger;
  * @author Luan Novais <oi@luandev.ml>
  */
 class SubmissionLoggerDao {
-	public $version = '1.0.0';
-	private $database;
+	public $version = '1.1.0';
+	private $database, $databaseType;
 
 	public function __construct()
 	{
 		$database = new Database;
 
 		$this->database = $database->getInstance();
+		$this->databaseType = $database->type;
 	}
 
 	public function index()
 	{
 		$logs = [];
 
-		$query = 'SELECT data, date FROM sl_logs ORDER BY datetime(date) DESC';		
-		$stmt = $this->database->prepare($query);		
+		$query = $this->databaseType === 'sqlite' ? 'SELECT data, date FROM sl_logs ORDER BY datetime(date) DESC' : 'SELECT data, date FROM sl_logs ORDER BY date DESC';
+		$stmt = $this->database->prepare($query);
+
 		$result = $stmt->execute();
 
-		while($log = $result->fetchArray(SQLITE3_ASSOC)) {
-			array_push($logs, [
-				'data' => unserialize($log['data']),
-				'date' => $log['date']
-			]);
+		if($this->databaseType === 'mysql') {
+			$result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+		}
+
+		if($this->databaseType === 'sqlite') {
+			while($log = $result->fetchArray(SQLITE3_ASSOC)) {
+				array_push($logs, [
+					'data' => unserialize($log['data']),
+					'date' => $log['date']
+				]);
+			}
+		} else {
+			for($i = 0; $i < count($result); $i++) {
+				array_push($logs, [
+					'data' => unserialize($result[$i]['data']),
+					'date' => $result[$i]['date']
+				]);
+			}
 		}
 
 		return $logs;
@@ -54,7 +69,7 @@ class SubmissionLoggerDao {
 		$stmt = $this->database->prepare($query);
 		$result = $stmt->execute();
 
-		$total = $result->fetchArray(SQLITE3_NUM)[0];
+		$total = $this->databaseType === 'sqlite' ? $result->fetchArray(SQLITE3_NUM)[0] : $stmt->fetch(\PDO::FETCH_NUM)[0];
 
 		return ceil($total / $perPage);
 	}
@@ -67,17 +82,37 @@ class SubmissionLoggerDao {
 
 		$logs = [];
 		
-		$query = 'SELECT data, date FROM sl_logs ORDER BY datetime(date) DESC LIMIT :offset, :perPage';
+		$query = $this->databaseType === 'sqlite' ? 'SELECT data, date FROM sl_logs ORDER BY datetime(date) DESC LIMIT :offset, :perPage' : 'SELECT data, date FROM sl_logs ORDER BY date DESC LIMIT :offset, :perPage';
 		$stmt = $this->database->prepare($query);
-		$stmt->bindValue(':offset', $offset);
-		$stmt->bindValue(':perPage', $perPage);
+		
+		if($this->databaseType === 'sqlite') {
+			$stmt->bindParam(':offset', $offset, SQLITE3_NUM);
+			$stmt->bindParam(':perPage', $perPage, SQLITE3_NUM);
+		} else {
+			$stmt->bindParam(':offset', $offset, \PDO::PARAM_INT);
+			$stmt->bindParam(':perPage', $perPage, \PDO::PARAM_INT);
+		}
+
 		$result = $stmt->execute();
 
-		while($log = $result->fetchArray(SQLITE3_ASSOC)) {
-			array_push($logs, [
-				'data' => unserialize($log['data']),
-				'date' => $log['date']
-			]);
+		if($this->databaseType === 'mysql') {
+			$result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+		}
+
+		if($this->databaseType === 'sqlite') {
+			while($log = $result->fetchArray(SQLITE3_ASSOC)) {
+				array_push($logs, [
+					'data' => unserialize($log['data']),
+					'date' => $log['date']
+				]);
+			}
+		} else {
+			for($i = 0; $i < count($result); $i++) {
+				array_push($logs, [
+					'data' => unserialize($result[$i]['data']),
+					'date' => $result[$i]['date']
+				]);
+			}
 		}
 
 		return [
@@ -93,9 +128,49 @@ class SubmissionLoggerDao {
 		$query = 'INSERT INTO sl_logs (data, date) VALUES (:data, :date)';
 
 		$stmt = $this->database->prepare($query);
-		$stmt->bindValue(':data', $data, SQLITE3_TEXT);
-		$stmt->bindValue(':date', $date, SQLITE3_TEXT);
+
+		if($this->databaseType === 'sqlite') {
+			$stmt->bindParam(':data', $data, SQLITE3_TEXT);
+			$stmt->bindParam(':date', $date, SQLITE3_TEXT);
+		} else {
+			$stmt->bindParam(':data', $data, \PDO::PARAM_STR);
+			$stmt->bindParam(':date', $date, \PDO::PARAM_STR);
+		}
 		
+		$result = $stmt->execute();
+
+		return $result;
+	}
+
+	public function getAuth()
+	{
+		$query = 'SELECT `key` FROM sl_auth';
+
+		$stmt = $this->database->prepare($query);
+
+		$result = $stmt->execute();
+
+		if($this->databaseType === 'sqlite') {
+			$result = $result->fetchArray(SQLITE3_ASSOC);
+		} else {
+			$result = $stmt->fetch(\PDO::FETCH_ASSOC);
+		}
+		
+		return $result;
+	}
+
+	public function setAuth($hashedPassword)
+	{
+		$query = 'INSERT INTO sl_auth (`key`) VALUES (:password)';
+
+		$stmt = $this->database->prepare($query);
+
+		if($this->databaseType === 'sqlite') {
+			$stmt->bindParam(':password', $hashedPassword, SQLITE3_TEXT);
+		} else {
+			$stmt->bindParam(':password', $hashedPassword, \PDO::PARAM_STR, 60);
+		}
+
 		$result = $stmt->execute();
 
 		return $result;

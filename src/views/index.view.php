@@ -53,7 +53,7 @@
 				</table>
 
 				<nav>
-					<?php echo $pagination; ?>
+					<?php echo isset($pagination) ? $pagination : ''; ?>
 				</nav>
 			</div>
 		</div>
