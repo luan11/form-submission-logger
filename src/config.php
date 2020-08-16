@@ -12,7 +12,7 @@
 /**
  * This option accepts these values: sqlite, mysql, json
  */
-define('DATABASE_TYPE', 'json');
+define('DATABASE_TYPE', 'sqlite');
 
 /**
  * MySQL Database
