@@ -14,30 +14,94 @@
 
 namespace SubmissionLogger;
 
-use SQLite3;
-
 /**
  * SubmissionLogger Database handler class.
  * @package SubmissionLogger
  * @author Luan Novais <oi@luandev.ml>
  */
 class Database {
+	const DATABASE_TYPES = ['sqlite', 'mysql', 'json'];
 	const DATABASE_DIR = __DIR__ . DIRECTORY_SEPARATOR . 'database' . DIRECTORY_SEPARATOR;
-	const DATABASE_FILENAME = 'db_sl.sqlite';
-	const QUERY_CREATE_AUTH_TABLE = 'CREATE TABLE IF NOT EXISTS sl_auth (key TEXT)';
-	const QUERY_CREATE_LOGS_TABLE = 'CREATE TABLE IF NOT EXISTS sl_logs (data TEXT, date TEXT)';
 
-	public $version = '1.0.0';
-	private $instance;
+	public $version = '2.0.0', $type;
+	private $instance, $filename, $build;
 
 	public function __construct()
 	{
-		$this->instance = new SQLite3(self::DATABASE_DIR . self::DATABASE_FILENAME);
+		if(in_array(DATABASE_TYPE, self::DATABASE_TYPES)) {
+			$this->type = DATABASE_TYPE;
 
-		$instance = $this->instance;
+			if($this->type !== 'mysql') {
+				$this->filename = 'db_sl.' . $this->type;
+			}
 
-		$instance->exec(self::QUERY_CREATE_AUTH_TABLE);
-		$instance->exec(self::QUERY_CREATE_LOGS_TABLE);
+			if($this->type !== 'json') {
+				if($this->type === 'sqlite') {
+					$this->build = [
+						'create_auth_table' => 'CREATE TABLE IF NOT EXISTS `sl_auth` (`key` TEXT)',
+						'create_logs_table' => 'CREATE TABLE IF NOT EXISTS `sl_logs` (`data` TEXT, date TEXT)'
+					];
+				}
+
+				if($this->type === 'mysql') {
+					$this->build = [
+						'create_auth_table' => 'CREATE TABLE IF NOT EXISTS `sl_auth` (`key` VARCHAR(60) NOT NULL)',
+						'create_logs_table' => 'CREATE TABLE IF NOT EXISTS `sl_logs` (`data` LONGTEXT NOT NULL, `date` DATETIME)'
+					];
+				}
+			} else {
+				$this->build = [
+					'create_auth_table' => 'sl_auth',
+					'create_logs_table' => 'sl_logs'
+				];
+			}
+
+			switch ($this->type) {
+				case 'sqlite':
+					$this->makeSqliteInstance();
+				break;
+
+				case 'mysql':
+					$this->makeMysqlInstance();
+				break;
+
+				case 'json':
+					$this->makeJsonInstance();
+				break;
+			}
+		} else {
+			exit('It\'s necessary to define a valid database type in file config.php.');
+		}
+	}
+
+	private function makeSqliteInstance()
+	{
+		$this->instance = new \SQLite3(self::DATABASE_DIR . $this->filename);
+
+		$instance = $this->getInstance();
+
+		$instance->exec($this->build['create_auth_table']);
+		$instance->exec($this->build['create_logs_table']);
+	}
+
+	private function makeMysqlInstance()
+	{
+		$this->instance = new \PDO('mysql:host='. MYSQL_DATABASE_HOST .';dbname='. MYSQL_DATABASE_NAME .';charset=utf8', MYSQL_DATABASE_USER, MYSQL_DATABASE_PASSWORD);
+
+		$instance = $this->getInstance();
+
+		$instance->exec($this->build['create_auth_table']);
+		$instance->exec($this->build['create_logs_table']);
+	}
+
+	private function makeJsonInstance()
+	{
+		$this->instance = new JSONDatabase(self::DATABASE_DIR . $this->filename);
+
+		$instance = $this->getInstance();
+
+		$instance->createTable($this->build['create_auth_table']);
+		$instance->createTable($this->build['create_logs_table']);
 	}
 
 	public function getInstance()

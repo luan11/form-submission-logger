@@ -23,6 +23,12 @@
 			<h4 class="card-title">Insert registered password to see logs</h4>
 
 			<form method="POST" autocomplete="off">
+				<?php if(!empty($messages)):
+					foreach($messages as $message): ?>
+					<div class="alert alert-<?php echo $message[1]; ?>"><?php echo $message[0]; ?></div>
+				<?php endforeach;
+				endif; ?>
+
 				<div class="form-group">
 					<label for="password_check">Password</label>
 					<input type="password" class="form-control" id="password_check" name="password_check" required>

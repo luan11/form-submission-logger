@@ -20,14 +20,19 @@ namespace SubmissionLogger;
  * @author Luan Novais <oi@luandev.ml>
  */
 class SubmissionLogger {
-	public $version = '1.0.0';
-	private $database, $authenticated, $unregistered, $passwordRegister, $passwordCheck, $logout;
+	public $version = '1.1.0';
+	private $dao, $authenticated, $unregistered, $passwordRegister, $passwordCheck, $logout, $messages = [];
 
 	public function __construct()
 	{
 		$this->passwordRegister = isset($_POST['password_register']) ? filter_var($_POST['password_register']) : false;
 		$this->passwordCheck = isset($_POST['password_check']) ? filter_var($_POST['password_check']) : false;
 		$this->logout = isset($_POST['_logout']) ? filter_var($_POST['_logout']) : false;
+	}
+
+	private function setMessage($content, $type = 'info')
+	{
+		array_push($this->messages, [$content, $type]);
 	}
 
 	private function setAuthPassword($password)
@@ -38,56 +43,44 @@ class SubmissionLogger {
 
 		$hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-		$query = 'INSERT INTO sl_auth (key) VALUES (:password)';
-
-		if(!isset($this->database)) {
-			$database = new Database();
-			$this->database = $database->getInstance();
+		if(!isset($this->dao)) {
+			$this->dao = new SubmissionLoggerDao;
 		}
 
-		$stmt = $this->database->prepare($query);
-		$stmt->bindValue(':password', $hashedPassword, SQLITE3_TEXT);
-		$stmt->execute();
+		$this->dao->setAuth($hashedPassword);
 
 		header('Refresh: 0');
 	}
 
 	private function authenticate()
 	{
-		$query = 'SELECT key FROM sl_auth';
-
-		if(!isset($this->database)) {
-			$database = new Database();
-			$this->database = $database->getInstance();
+		if(!isset($this->dao)) {
+			$this->dao = new SubmissionLoggerDao;
 		}
 
-		$stmt = $this->database->prepare($query);
-
-		$result = $stmt->execute();
-
-		$resultFetched = $result->fetchArray(SQLITE3_ASSOC);
+		$auth = $this->dao->getAuth();
 
 		if(session_status() === PHP_SESSION_NONE) {
 			session_start();
 		}
 
-		if(isset($_SESSION['auth']) && $_SESSION['auth'] === true && $resultFetched !== false) {
+		if(isset($_SESSION['auth']) && $_SESSION['auth'] === true && $auth !== false) {
 			$this->authenticated = true;
 		} else {
-			if($resultFetched === false) {
+			if($auth === false) {
 				$this->authenticated = false;
 				$this->unregistered = true;
 			} else {
 				if($this->passwordCheck) {
-					$registeredPassword = $resultFetched['key'];
+					$registeredPassword = $auth['key'];
 
 					if(password_verify($this->passwordCheck, $registeredPassword)) {
 						$this->authenticated = true;
 						
 						$_SESSION['auth'] = $this->authenticated;
-
-						header('Refresh: 0');
 					} else {
+						$this->setMessage('Wrong password, try again.', 'danger');
+
 						$this->authenticated = false;
 					}					
 				} else {
@@ -115,9 +108,9 @@ class SubmissionLogger {
 	{
 		$serializedData = serialize($data);
 
-		$submissionLoggerDao = new SubmissionLoggerDao();
+		$dao = new SubmissionLoggerDao();
 		
-		return $submissionLoggerDao->store($serializedData);
+		return $dao->store($serializedData);
 	}
 
 	public function start()
@@ -125,15 +118,17 @@ class SubmissionLogger {
 		$this->authenticate();
 
 		if($this->authenticated) {
-			$submissionLoggerDao = new SubmissionLoggerDao;
+			if(!isset($this->dao)) {
+				$this->dao = new SubmissionLoggerDao;
+			}
 			
-			$logs = $submissionLoggerDao->paginate();
+			$logs = $this->dao->paginate();
 
 			View::show('index', $logs);
 		}
 
 		if(!$this->authenticated && !$this->unregistered) {
-			View::show('auth');
+			View::show('auth', ['messages' => $this->messages]);
 		}
 
 		if(!$this->authenticated && $this->unregistered) {
