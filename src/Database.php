@@ -51,8 +51,8 @@ class Database {
 				}
 			} else {
 				$this->build = [
-					'sl_auth' => [],
-					'sl_logs' => []
+					'create_auth_table' => 'sl_auth',
+					'create_logs_table' => 'sl_logs'
 				];
 			}
 
@@ -66,11 +66,11 @@ class Database {
 				break;
 
 				case 'json':
-
+					$this->makeJsonInstance();
 				break;
 			}
 		} else {
-			exit('It\'s necessary to define a valid database type in file config.php');
+			exit('It\'s necessary to define a valid database type in file config.php.');
 		}
 	}
 
@@ -78,7 +78,7 @@ class Database {
 	{
 		$this->instance = new \SQLite3(self::DATABASE_DIR . $this->filename);
 
-		$instance = $this->instance;
+		$instance = $this->getInstance();
 
 		$instance->exec($this->build['create_auth_table']);
 		$instance->exec($this->build['create_logs_table']);
@@ -88,7 +88,7 @@ class Database {
 	{
 		$this->instance = new \PDO('mysql:host='. MYSQL_DATABASE_HOST .';dbname='. MYSQL_DATABASE_NAME .';charset=utf8', MYSQL_DATABASE_USER, MYSQL_DATABASE_PASSWORD);
 
-		$instance = $this->instance;
+		$instance = $this->getInstance();
 
 		$instance->exec($this->build['create_auth_table']);
 		$instance->exec($this->build['create_logs_table']);
@@ -96,7 +96,12 @@ class Database {
 
 	private function makeJsonInstance()
 	{
-		
+		$this->instance = new JSONDatabase(self::DATABASE_DIR . $this->filename);
+
+		$instance = $this->getInstance();
+
+		$instance->createTable($this->build['create_auth_table']);
+		$instance->createTable($this->build['create_logs_table']);
 	}
 
 	public function getInstance()

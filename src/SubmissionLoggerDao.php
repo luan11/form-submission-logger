@@ -35,28 +35,43 @@ class SubmissionLoggerDao {
 	{
 		$logs = [];
 
-		$query = $this->databaseType === 'sqlite' ? 'SELECT data, date FROM sl_logs ORDER BY datetime(date) DESC' : 'SELECT data, date FROM sl_logs ORDER BY date DESC';
-		$stmt = $this->database->prepare($query);
+		if($this->databaseType !== 'json') {
+			$query = $this->databaseType === 'sqlite' ? 'SELECT data, date FROM sl_logs ORDER BY datetime(date) DESC' : 'SELECT data, date FROM sl_logs ORDER BY date DESC';
+			$stmt = $this->database->prepare($query);
 
-		$result = $stmt->execute();
+			$result = $stmt->execute();
 
-		if($this->databaseType === 'mysql') {
-			$result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-		}
+			if($this->databaseType === 'mysql') {
+				$result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+			}
 
-		if($this->databaseType === 'sqlite') {
-			while($log = $result->fetchArray(SQLITE3_ASSOC)) {
-				array_push($logs, [
-					'data' => unserialize($log['data']),
-					'date' => $log['date']
-				]);
+			if($this->databaseType === 'sqlite') {
+				while($log = $result->fetchArray(SQLITE3_ASSOC)) {
+					array_push($logs, [
+						'data' => unserialize($log['data']),
+						'date' => $log['date']
+					]);
+				}
+			} else {
+				for($i = 0; $i < count($result); $i++) {
+					array_push($logs, [
+						'data' => unserialize($result[$i]['data']),
+						'date' => $result[$i]['date']
+					]);
+				}
 			}
 		} else {
-			for($i = 0; $i < count($result); $i++) {
-				array_push($logs, [
-					'data' => unserialize($result[$i]['data']),
-					'date' => $result[$i]['date']
-				]);
+			$result = $this->database->select('sl_logs', 'DESC');
+
+			if($result) {
+				for($i = 0; $i < count($result); $i++) {
+					array_push($logs, [
+						'data' => unserialize($result[$i]['data']),
+						'date' => $result[$i]['date']
+					]);
+				}
+			} else {
+				$result = [];
 			}
 		}
 
@@ -65,11 +80,21 @@ class SubmissionLoggerDao {
 
 	private function totalOfPages($perPage)
 	{
-		$query = 'SELECT count(*) FROM sl_logs';
-		$stmt = $this->database->prepare($query);
-		$result = $stmt->execute();
+		if($this->databaseType !== 'json') {
+			$query = 'SELECT count(*) FROM sl_logs';
+			$stmt = $this->database->prepare($query);
+			$result = $stmt->execute();
 
-		$total = $this->databaseType === 'sqlite' ? $result->fetchArray(SQLITE3_NUM)[0] : $stmt->fetch(\PDO::FETCH_NUM)[0];
+			$total = $this->databaseType === 'sqlite' ? $result->fetchArray(SQLITE3_NUM)[0] : $stmt->fetch(\PDO::FETCH_NUM)[0];
+		} else {
+			$allLogs = $this->database->select('sl_logs');
+
+			if($allLogs) {
+				$total = count($allLogs);
+			} else {
+				$total = 0;
+			}
+		}
 
 		return ceil($total / $perPage);
 	}
@@ -82,36 +107,51 @@ class SubmissionLoggerDao {
 
 		$logs = [];
 		
-		$query = $this->databaseType === 'sqlite' ? 'SELECT data, date FROM sl_logs ORDER BY datetime(date) DESC LIMIT :offset, :perPage' : 'SELECT data, date FROM sl_logs ORDER BY date DESC LIMIT :offset, :perPage';
-		$stmt = $this->database->prepare($query);
-		
-		if($this->databaseType === 'sqlite') {
-			$stmt->bindParam(':offset', $offset, SQLITE3_NUM);
-			$stmt->bindParam(':perPage', $perPage, SQLITE3_NUM);
-		} else {
-			$stmt->bindParam(':offset', $offset, \PDO::PARAM_INT);
-			$stmt->bindParam(':perPage', $perPage, \PDO::PARAM_INT);
-		}
+		if($this->databaseType !== 'json') {
+			$query = $this->databaseType === 'sqlite' ? 'SELECT data, date FROM sl_logs ORDER BY datetime(date) DESC LIMIT :offset, :perPage' : 'SELECT data, date FROM sl_logs ORDER BY date DESC LIMIT :offset, :perPage';
+			$stmt = $this->database->prepare($query);
+			
+			if($this->databaseType === 'sqlite') {
+				$stmt->bindParam(':offset', $offset, SQLITE3_NUM);
+				$stmt->bindParam(':perPage', $perPage, SQLITE3_NUM);
+			} else {
+				$stmt->bindParam(':offset', $offset, \PDO::PARAM_INT);
+				$stmt->bindParam(':perPage', $perPage, \PDO::PARAM_INT);
+			}
 
-		$result = $stmt->execute();
+			$result = $stmt->execute();
 
-		if($this->databaseType === 'mysql') {
-			$result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-		}
+			if($this->databaseType === 'mysql') {
+				$result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+			}
 
-		if($this->databaseType === 'sqlite') {
-			while($log = $result->fetchArray(SQLITE3_ASSOC)) {
-				array_push($logs, [
-					'data' => unserialize($log['data']),
-					'date' => $log['date']
-				]);
+			if($this->databaseType === 'sqlite') {
+				while($log = $result->fetchArray(SQLITE3_ASSOC)) {
+					array_push($logs, [
+						'data' => unserialize($log['data']),
+						'date' => $log['date']
+					]);
+				}
+			} else {
+				for($i = 0; $i < count($result); $i++) {
+					array_push($logs, [
+						'data' => unserialize($result[$i]['data']),
+						'date' => $result[$i]['date']
+					]);
+				}
 			}
 		} else {
-			for($i = 0; $i < count($result); $i++) {
-				array_push($logs, [
-					'data' => unserialize($result[$i]['data']),
-					'date' => $result[$i]['date']
-				]);
+			$result = $this->database->select('sl_logs', 'DESC', $offset, $perPage);
+
+			if($result) {
+				for($i = 0; $i < count($result); $i++) {
+					array_push($logs, [
+						'data' => unserialize($result[$i]['data']),
+						'date' => $result[$i]['date']
+					]);
+				}
+			} else {
+				$result = [];
 			}
 		}
 
@@ -125,35 +165,50 @@ class SubmissionLoggerDao {
 	{
 		$date = date('Y-m-d H:i:s');
 
-		$query = 'INSERT INTO sl_logs (data, date) VALUES (:data, :date)';
+		if($this->databaseType !== 'json') {
+			$query = 'INSERT INTO sl_logs (data, date) VALUES (:data, :date)';
 
-		$stmt = $this->database->prepare($query);
+			$stmt = $this->database->prepare($query);
 
-		if($this->databaseType === 'sqlite') {
-			$stmt->bindParam(':data', $data, SQLITE3_TEXT);
-			$stmt->bindParam(':date', $date, SQLITE3_TEXT);
+			if($this->databaseType === 'sqlite') {
+				$stmt->bindParam(':data', $data, SQLITE3_TEXT);
+				$stmt->bindParam(':date', $date, SQLITE3_TEXT);
+			} else {
+				$stmt->bindParam(':data', $data, \PDO::PARAM_STR);
+				$stmt->bindParam(':date', $date, \PDO::PARAM_STR);
+			}
+			
+			$result = $stmt->execute();
 		} else {
-			$stmt->bindParam(':data', $data, \PDO::PARAM_STR);
-			$stmt->bindParam(':date', $date, \PDO::PARAM_STR);
+			$result = $this->database->insert('sl_logs', [
+				'data' => $data,
+				'date' => $date
+			]);
 		}
-		
-		$result = $stmt->execute();
 
 		return $result;
 	}
 
 	public function getAuth()
 	{
-		$query = 'SELECT `key` FROM sl_auth';
+		if($this->databaseType !== 'json') {
+			$query = 'SELECT `key` FROM sl_auth';
 
-		$stmt = $this->database->prepare($query);
+			$stmt = $this->database->prepare($query);
 
-		$result = $stmt->execute();
+			$result = $stmt->execute();
 
-		if($this->databaseType === 'sqlite') {
-			$result = $result->fetchArray(SQLITE3_ASSOC);
+			if($this->databaseType === 'sqlite') {
+				$result = $result->fetchArray(SQLITE3_ASSOC);
+			} else {
+				$result = $stmt->fetch(\PDO::FETCH_ASSOC);
+			}
 		} else {
-			$result = $stmt->fetch(\PDO::FETCH_ASSOC);
+			$result = $this->database->select('sl_auth');
+
+			if($result) {
+				$result = $result[0];
+			}
 		}
 		
 		return $result;
@@ -161,17 +216,23 @@ class SubmissionLoggerDao {
 
 	public function setAuth($hashedPassword)
 	{
-		$query = 'INSERT INTO sl_auth (`key`) VALUES (:password)';
+		if($this->databaseType !== 'json') {
+			$query = 'INSERT INTO sl_auth (`key`) VALUES (:password)';
 
-		$stmt = $this->database->prepare($query);
+			$stmt = $this->database->prepare($query);
 
-		if($this->databaseType === 'sqlite') {
-			$stmt->bindParam(':password', $hashedPassword, SQLITE3_TEXT);
+			if($this->databaseType === 'sqlite') {
+				$stmt->bindParam(':password', $hashedPassword, SQLITE3_TEXT);
+			} else {
+				$stmt->bindParam(':password', $hashedPassword, \PDO::PARAM_STR, 60);
+			}
+
+			$result = $stmt->execute();
 		} else {
-			$stmt->bindParam(':password', $hashedPassword, \PDO::PARAM_STR, 60);
+			$result = $this->database->insert('sl_auth', [
+				'key' => $hashedPassword
+			]);
 		}
-
-		$result = $stmt->execute();
 
 		return $result;
 	}

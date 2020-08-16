@@ -2,13 +2,21 @@
 
 # Form SubmissionLogger - A way to save form submissions and view then
 
-## :rocket: Usage example
+## :triangular_flag_on_post: Usage example
 
-First download the project and use files from `/src` folder.
+### Before all, in file `config.php` (from `src` folder) choose your database type
+
+#### Available database types
+
+| Type | Need credentials | Recommended |
+| ---- | ---------------- | ----------- |
+| SQLite3 `default` | :x: | :+1: |
+| MySQL | :heavy_check_mark: | :+1: |
+| JSON | :x: | :-1: |
 
 ### To save the submission data from form
 
-`form.php`
+**File:** `save-log.php`
 
 ```php
 <?php
@@ -31,7 +39,7 @@ if(SubmissionLogger::store($data) === false) {
 
 ### To see logs
 
-`logs.php`
+**File:** `see-logs.php`
 
 ```php
 <?php

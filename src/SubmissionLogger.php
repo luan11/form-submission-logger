@@ -21,13 +21,18 @@ namespace SubmissionLogger;
  */
 class SubmissionLogger {
 	public $version = '1.1.0';
-	private $database, $authenticated, $unregistered, $passwordRegister, $passwordCheck, $logout;
+	private $dao, $authenticated, $unregistered, $passwordRegister, $passwordCheck, $logout, $messages = [];
 
 	public function __construct()
 	{
 		$this->passwordRegister = isset($_POST['password_register']) ? filter_var($_POST['password_register']) : false;
 		$this->passwordCheck = isset($_POST['password_check']) ? filter_var($_POST['password_check']) : false;
 		$this->logout = isset($_POST['_logout']) ? filter_var($_POST['_logout']) : false;
+	}
+
+	private function setMessage($content, $type = 'info')
+	{
+		array_push($this->messages, [$content, $type]);
 	}
 
 	private function setAuthPassword($password)
@@ -38,18 +43,22 @@ class SubmissionLogger {
 
 		$hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-		$dao = new SubmissionLoggerDao;
+		if(!isset($this->dao)) {
+			$this->dao = new SubmissionLoggerDao;
+		}
 
-		$dao->setAuth($hashedPassword);
+		$this->dao->setAuth($hashedPassword);
 
 		header('Refresh: 0');
 	}
 
 	private function authenticate()
 	{
-		$dao = new SubmissionLoggerDao;
+		if(!isset($this->dao)) {
+			$this->dao = new SubmissionLoggerDao;
+		}
 
-		$auth = $dao->getAuth();
+		$auth = $this->dao->getAuth();
 
 		if(session_status() === PHP_SESSION_NONE) {
 			session_start();
@@ -69,9 +78,9 @@ class SubmissionLogger {
 						$this->authenticated = true;
 						
 						$_SESSION['auth'] = $this->authenticated;
-
-						header('Refresh: 0');
 					} else {
+						$this->setMessage('Wrong password, try again.', 'danger');
+
 						$this->authenticated = false;
 					}					
 				} else {
@@ -109,15 +118,17 @@ class SubmissionLogger {
 		$this->authenticate();
 
 		if($this->authenticated) {
-			$dao = new SubmissionLoggerDao;
+			if(!isset($this->dao)) {
+				$this->dao = new SubmissionLoggerDao;
+			}
 			
-			$logs = $dao->paginate();
+			$logs = $this->dao->paginate();
 
 			View::show('index', $logs);
 		}
 
 		if(!$this->authenticated && !$this->unregistered) {
-			View::show('auth');
+			View::show('auth', ['messages' => $this->messages]);
 		}
 
 		if(!$this->authenticated && $this->unregistered) {
