@@ -20,7 +20,7 @@ namespace SubmissionLogger;
  * @author Luan Novais <oi@luandev.ml>
  */
 class SubmissionLogger {
-	public $version = '1.1.0';
+	public $version = '1.1.1';
 	private $dao, $authenticated, $unregistered, $passwordRegister, $passwordCheck, $logout, $messages = [];
 
 	public function __construct()
@@ -50,6 +50,7 @@ class SubmissionLogger {
 		$this->dao->setAuth($hashedPassword);
 
 		header('Refresh: 0');
+		exit;
 	}
 
 	private function authenticate()
@@ -102,6 +103,7 @@ class SubmissionLogger {
 		$this->authenticated = false;
 
 		header('Refresh: 0');
+		exit;
 	}
 
 	public static function store($data)
