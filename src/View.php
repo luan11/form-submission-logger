@@ -35,24 +35,24 @@ class View {
 	public static function pagination($currentPage, $total)
 	{
 		$list = '<ul class="pagination">%s</ul>';
-		$lisItems = '';
+		$listItems = '';
 
 		if($currentPage > 1) {
-			$lisItems .= '<li class="page-item"> <a class="page-link" href="?page='. ($currentPage - 1) .'" aria-label="Previous"> <span aria-hidden="true">&laquo;</span> </a> </li>';
+			$listItems .= '<li class="page-item"> <a class="page-link" href="?page='. ($currentPage - 1) .'" aria-label="Previous"> <span aria-hidden="true">&laquo;</span> </a> </li>';
 		}
 
 		for($i = 1; $i <= $total; $i++) {
 			if($i === $currentPage) {
-				$lisItems .= '<li class="page-item active"> <span class="page-link"> '. $i .' </span> </li>';
+				$listItems .= '<li class="page-item active"> <span class="page-link"> '. $i .' </span> </li>';
 			} else {
-				$lisItems .= '<li class="page-item"><a class="page-link" href="?page='. $i .'">'. $i .'</a></li>';
+				$listItems .= '<li class="page-item"><a class="page-link" href="?page='. $i .'">'. $i .'</a></li>';
 			}
 		}
 
 		if($currentPage < $total) {
-			$lisItems .= '<li class="page-item"> <a class="page-link" href="?page='. ($currentPage + 1) .'" aria-label="Next"> <span aria-hidden="true">&raquo;</span> </a> </li>';
+			$listItems .= '<li class="page-item"> <a class="page-link" href="?page='. ($currentPage + 1) .'" aria-label="Next"> <span aria-hidden="true">&raquo;</span> </a> </li>';
 		}
 
-		return $total > 1 ? sprintf($list, $lisItems) : '';
+		return $total > 1 ? sprintf($list, $listItems) : '';
 	}
 }
